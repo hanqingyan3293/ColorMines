@@ -7,6 +7,7 @@
 
 import { generateBoard } from '../src/core/generator.js';
 import { makeBoard, validateBoard, unitBanding, type BoardShape } from '../src/core/board.js';
+import { difficultyToConfig, configToDifficulty } from '../src/core/tiers.js';
 import { countSolutions } from '../src/core/solver-exact.js';
 import { solveLogical } from '../src/core/solver-logical.js';
 import { TIERS } from '../src/core/tiers.js';
@@ -224,6 +225,29 @@ section('随机对局回归');
 }
 
 // ---------------------------------------------------------------------------
+console.log('\n[难度滑块：雷数随刻度单调不降]');
+{
+  // Difficulty is driven by mine count, so the ramp must never go backwards.
+  let previous = 0;
+  let monotonic = true;
+  const samples: string[] = [];
+  for (let level = 0; level <= 100; level += 10) {
+    const config = difficultyToConfig(level);
+    if (config.colorCount < previous) monotonic = false;
+    previous = config.colorCount;
+    samples.push(config.width + 'x' + config.height + '/' + config.colorCount);
+  }
+  check(monotonic, '雷数应随难度刻度不下降: ' + samples.join(' '));
+  check(difficultyToConfig(0).colorCount === 4, '刻度 0 应为入门的 4 雷');
+  check(difficultyToConfig(100).colorCount >= 8, '刻度 100 应达到极限档雷数');
+
+  // Typing past the slider maximum must still yield a legal config.
+  const beyond = difficultyToConfig(150);
+  check(beyond.width <= 24 && beyond.colorCount >= 2, '超出上限应被夹紧到合法范围');
+  check(configToDifficulty({ width: 12, height: 12, colorCount: 10, maxBand: 1 }) > 40,
+    '反查应把 12x12/10 雷定位在中高难度');
+}
+
 console.log(`\n${checks - failures}/${checks} 通过`);
 if (failures > 0) {
   console.log(`${failures} 失败`);

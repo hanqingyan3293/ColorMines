@@ -11,7 +11,9 @@
 
 import './style.css';
 import { deserializeBoard, newMapId, serializeBoard, type SerializedBoard } from './core/serialize.js';
-import { TIERS, estimateFeasibility, hintBudget } from './core/tiers.js';
+import {
+  TIERS, configToDifficulty, difficultyToConfig, estimateFeasibility, hintBudget,
+} from './core/tiers.js';
 import {
   applyDirectHint, createSession, cycleMark, elapsedMs, flagCount, correctFlags,
   reveal, type Session,
@@ -64,6 +66,9 @@ const playArea = el('playArea');
 const restorePreview = el('restorePreview');
 const restoreSummary = el('restoreSummary');
 
+const difficultyRange = el<HTMLInputElement>('setDifficultyRange');
+const difficultyInput = el<HTMLInputElement>('setDifficulty');
+const difficultyPreview = el('difficultyPreview');
 const setW = el<HTMLInputElement>('setW');
 const setH = el<HTMLInputElement>('setH');
 const setK = el<HTMLInputElement>('setK');
@@ -441,6 +446,36 @@ el('dataDirReset').addEventListener('click', async () => {
   await renderDataPaths();
 });
 
+/**
+ * One knob for overall difficulty. Dragging walks the ramp; typing accepts any
+ * value past the slider's maximum and simply clamps the slider's thumb.
+ */
+function applyDifficulty(level: number, writeToFields = true): void {
+  const config = difficultyToConfig(level);
+  if (writeToFields) {
+    setW.value = String(config.width);
+    setH.value = String(config.height);
+    setK.value = String(config.colorCount);
+    setBand.value = String(config.maxBand);
+  }
+  difficultyPreview.textContent = t('settings.difficultyPreview',
+    config.width, config.height, config.colorCount,
+    config.maxBand > 1 ? t('settings.difficultyGrouped') : '');
+  refreshFeasibility();
+}
+
+function syncDifficulty(source: 'slider' | 'box'): void {
+  if (source === 'slider') {
+    difficultyInput.value = difficultyRange.value;
+    applyDifficulty(Number(difficultyRange.value));
+  } else {
+    const value = Number(difficultyInput.value);
+    if (!Number.isFinite(value)) return;
+    difficultyRange.value = String(Math.min(Number(difficultyRange.max), Math.max(0, value)));
+    applyDifficulty(value);
+  }
+}
+
 async function renderStorageInfo(): Promise<void> {
   const info = document.getElementById('storageInfo');
   if (info) info.textContent = await store.describe();
@@ -454,6 +489,10 @@ function fillSettings(): void {
   setW.value = String(shape.width);
   setH.value = String(shape.height);
   setK.value = String(shape.colorCount);
+  // Show where the current custom setup sits on the difficulty ramp.
+  const level = configToDifficulty(shape);
+  difficultyRange.value = String(Math.min(Number(difficultyRange.max), level));
+  difficultyInput.value = String(level);
   setBand.value = String(shape.maxBand);
   setHistoryLimit.value = String(settings.historyLimit);
   setTimeoutInput.value = String(settings.timeoutMs);
@@ -481,6 +520,8 @@ function readShape(): ShapePrefs {
 }
 
 for (const input of [setW, setH, setK, setBand]) input.addEventListener('input', refreshFeasibility);
+difficultyRange.addEventListener('input', () => syncDifficulty('slider'));
+difficultyInput.addEventListener('input', () => syncDifficulty('box'));
 
 function collectSettings(): Settings {
   return {

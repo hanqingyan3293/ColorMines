@@ -149,6 +149,15 @@
             <label class="field"><span data-i18n="settings.historyLimit"></span><input id="setHistoryLimit" type="number" min="5" max="500" /></label>
             <label class="check"><input id="setDebug" type="checkbox" /><span data-i18n="settings.debug"></span></label>
             <p id="buildInfo" class="muted mono"></p>
+            <h4 data-i18n="settings.difficulty"></h4>
+            <div class="sliderRow">
+              <span class="sliderLabel" data-i18n="settings.difficulty"></span>
+              <input id="setDifficultyRange" type="range" min="0" max="100" step="1" />
+              <input id="setDifficulty" type="number" min="0" max="500" />
+            </div>
+            <p id="difficultyPreview" class="mono muted"></p>
+            <p class="muted" data-i18n="settings.difficultyHint"></p>
+
             <h4 data-i18n="settings.dataDir"></h4>
             <p id="dataDirCurrent" class="mono muted"></p>
             <div class="actions">

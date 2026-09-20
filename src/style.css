@@ -347,3 +347,23 @@ body {
 }
 .pathTable th { width: 56px; color: var(--muted); font-weight: 400; }
 .pathTable td { word-break: break-all; }
+
+/* ---- slider + numeric box share one value --------------------------------- */
+
+.sliderRow {
+  display: grid;
+  grid-template-columns: auto 1fr 64px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.sliderLabel { font-size: 13px; white-space: nowrap; }
+.sliderRow input[type='range'] { width: 100%; accent-color: var(--accent); }
+.sliderRow input[type='number'] {
+  padding: 5px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  text-align: right;
+}
