@@ -17,3 +17,6 @@ target-launch.png
 storage-line.png
 build-log.txt
 build2.log
+
+# Vite temp files
+vite.config.ts.timestamp-*.mjs
