@@ -1,0 +1,13 @@
+{
+  "name": "Color Mines 颜色扫雷",
+  "short_name": "Color Mines",
+  "description": "每种颜色恰好一个雷，每行每列显示雷的总数。",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#151922",
+  "theme_color": "#151922",
+  "icons": [
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,1 @@
+{"default":{"identifier":"default","description":"Native file I/O commands + folder picker. No plugin-fs scope needed.","local":true,"windows":["main"],"permissions":["core:default","dialog:default"]}}

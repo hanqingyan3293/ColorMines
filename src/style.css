@@ -1,0 +1,349 @@
+:root {
+  --bg: #151922;
+  --surface: #1c2230;
+  --surface-2: #232a38;
+  --border: #2e3648;
+  --text: #e5e9f0;
+  --muted: #8b95a7;
+  --accent: #4c78ff;
+  --danger: #ef5350;
+  --success: #4caf50;
+  --radius: 12px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+/* A `display` rule beats the [hidden] attribute, so panels that are laid out
+   with grid/flex never actually hide. Make the attribute win. */
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 400 14px/1.6 system-ui, -apple-system, "Segoe UI", "Microsoft YaHei UI", sans-serif;
+}
+
+.layout {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+  display: grid;
+  gap: 20px;
+}
+
+.topbar { display: grid; gap: 14px; }
+.topbar h1 { margin: 0; font-size: 20px; font-weight: 500; }
+.tagline { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+
+.tiers { display: flex; flex-wrap: wrap; gap: 8px; }
+.tier {
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+}
+.tier:hover { border-color: var(--accent); }
+.tier.active { background: var(--accent); border-color: var(--accent); }
+
+.boardPane { display: grid; gap: 12px; justify-items: start; }
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--cell, 34px));
+  gap: 3px;
+  padding: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.cell {
+  width: var(--cell, 34px);
+  height: var(--cell, 34px);
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  background: var(--fill, #333);
+  color: var(--ink, #fff);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.cell:hover { filter: brightness(1.12); }
+
+/* Revealed cells read as "pressed in", so state is not signalled by colour alone. */
+.cell.revealed {
+  background: var(--surface-2);
+  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.55);
+}
+.cell.revealed::after {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--fill);
+  opacity: 0.85;
+  /* Digging shrinks the colour chip, so a safe dig reads as "pressed in". */
+  animation: chipShrink 220ms ease-out;
+}
+@keyframes chipShrink {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(0.5); opacity: 0.85; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cell.revealed::after { animation: none; }
+}
+.cell.unsure { color: #0b1220; }
+.cell.mine { outline: 2px solid var(--danger); outline-offset: -2px; }
+.cell.wrong { text-decoration: line-through; opacity: 0.5; }
+
+.clue {
+  width: var(--cell, 34px);
+  height: var(--cell, 34px);
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+.clue.corner { visibility: hidden; }
+
+.banner {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  max-width: 620px;
+}
+.banner.win { border-color: var(--success); }
+.banner.lose { border-color: var(--danger); }
+
+.statusLine { color: var(--muted); font-size: 13px; }
+.statusLine[data-state='error'] { color: var(--danger); }
+.statusLine[data-state='busy'] { color: var(--accent); }
+
+/* ---- four-view shell ---------------------------------------------------- */
+
+.topbar {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.brand h1 { margin: 0; font-size: 18px; font-weight: 500; }
+.tagline { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
+
+.nav { display: flex; flex-wrap: wrap; gap: 6px; }
+.navBtn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+.navBtn:hover { color: var(--text); background: var(--surface-2); }
+.navBtn.active {
+  color: var(--text);
+  background: var(--surface-2);
+  border-color: var(--accent);
+}
+
+.layout { max-width: 1180px; margin: 0 auto; padding: 20px; }
+.view { display: grid; gap: 16px; }
+
+.grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+@media (min-width: 1000px) { .grid { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); } }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: grid; gap: 10px;
+  max-width: 620px;
+}
+.panelHead { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.panelHead h2 { margin: 0; }
+
+/* ---- play view ---------------------------------------------------------- */
+
+.boardPane { display: grid; gap: 12px; justify-items: start; }
+.playBar, .gameBar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tiers { display: flex; flex-wrap: wrap; gap: 6px; }
+.tier {
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text); font-size: 12px; cursor: pointer;
+}
+.tier:hover { border-color: var(--accent); }
+.tier.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.btn {
+  padding: 7px 14px; border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text); font-size: 13px; cursor: pointer;
+}
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.ghost { background: transparent; color: var(--muted); }
+.btn.small { padding: 4px 10px; font-size: 12px; }
+
+.hud.compact { display: flex; flex-wrap: wrap; gap: 18px; margin: 0; }
+.hud.compact div { display: grid; gap: 2px; }
+.hud.compact dt { color: var(--muted); font-size: 12px; }
+.hud.compact dd { margin: 0; font-variant-numeric: tabular-nums; }
+
+/* ---- forms -------------------------------------------------------------- */
+
+.field { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 13px; }
+.field input, .field select {
+  width: 92px; padding: 6px 8px;
+  border-radius: 6px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text);
+}
+.field select { width: 140px; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 6px 0; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+/* ---- lists -------------------------------------------------------------- */
+
+.list { display: grid; gap: 6px; max-height: 340px; overflow: auto; }
+.listRow {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+.listRow span { flex: 1; font-size: 12px; }
+.listItem {
+  text-align: left; padding: 6px 10px;
+  border-radius: 6px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text); font-size: 12px; cursor: pointer;
+}
+.listItem:hover { border-color: var(--accent); }
+
+.muted { color: var(--muted); font-size: 12px; }
+.mono { font-family: var(--font-mono, ui-monospace, monospace); }
+.rules { margin: 0; padding-left: 18px; color: var(--muted); font-size: 12px; }
+.rules b { color: var(--text); font-weight: 500; }
+.feasibility { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.feasibility[data-state='risky'] { color: #ffb74d; }
+.feasibility[data-state='unlikely'] { color: var(--danger); }
+.bestLine { margin: 0; font-size: 12px; color: var(--muted); }
+
+/* ---- home: cards instead of a wall of text ------------------------------- */
+
+.hero h2 { margin: 0 0 4px; font-size: 22px; font-weight: 500; }
+.hero p { margin: 0; }
+
+.cardGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.entryCard {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 120ms, transform 120ms;
+}
+.entryCard:hover { border-color: var(--accent); transform: translateY(-2px); }
+.entryCard.primary { border-color: var(--accent); }
+.entryIcon { font-size: 22px; line-height: 1; }
+.entryTitle { font-size: 15px; font-weight: 500; }
+.entryDesc { font-size: 12px; color: var(--muted); }
+
+/* ---- play: board centred; board+replay side by side ---------------------- */
+
+.boardPane { width: 100%; justify-items: center; }
+.boardPane > * { justify-self: center; }
+
+#playArea.split {
+  display: grid;
+  grid-template-columns: auto minmax(280px, 360px);
+  gap: 18px;
+  align-items: start;
+  justify-items: start;
+}
+/* Flex ordering is far more predictable here than explicit grid rows:
+   tier bar (full width) -> board + replay side by side -> everything else. */
+#playArea.split {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: flex-start;
+}
+#playArea.split > .playBar { order: 1; flex: 1 1 100%; }
+#playArea.split > #board { order: 2; flex: 0 0 auto; }
+#playArea.split > #replayPanel { order: 3; flex: 1 1 300px; max-width: 380px; }
+#playArea.split > .gameBar,
+#playArea.split > #banner,
+#playArea.split > #statusLine,
+#playArea.split > .hud.compact,
+#playArea.split > #bestLine { order: 4; flex: 1 1 100%; }
+#playArea.split > #debugPanel { order: 5; flex: 1 1 300px; max-width: 380px; }
+@media (max-width: 900px) {
+  #playArea.split { grid-template-columns: 1fr; }
+}
+
+#replayPanel { max-width: none; }
+#playArea.split #replayPanel { max-height: 70vh; overflow: auto; }
+
+/* ---- replay overlay (restored: without these the board looked unchanged) -- */
+
+.cell.replay-excluded { opacity: 0.22; }
+.cell.replay-mine { outline: 2px solid var(--danger); outline-offset: -2px; }
+.cell.replay-current { outline: 2px solid var(--accent); outline-offset: -2px; }
+.cell.replay-mine::after { opacity: 0; }
+
+/* ---- debug card rides the right column next to the replay ----------------- */
+
+#playArea.split > #replayPanel { grid-column: 2; grid-row: 1; }
+#playArea.split > #debugPanel { grid-column: 2; grid-row: 2; }
+#playArea:not(.split) > #debugPanel { justify-self: center; }
+
+/* ---- tighter play view: keep everything on one screen --------------------- */
+
+.boardPane { gap: 10px; }
+.playBar, .gameBar { gap: 6px; }
+.tier { padding: 5px 10px; font-size: 12px; }
+.btn { padding: 6px 12px; font-size: 12px; }
+.hud.compact { gap: 14px; }
+.hud.compact dt { font-size: 11px; }
+.hud.compact dd { font-size: 13px; }
+.bestLine { margin: 0; }
+#board { --cell: 32px; }
+
+/* ---- data location panel -------------------------------------------------- */
+
+.pathTable { width: 100%; border-collapse: collapse; }
+.pathTable th, .pathTable td {
+  text-align: left;
+  padding: 4px 6px;
+  font-size: 11px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.pathTable th { width: 56px; color: var(--muted); font-weight: 400; }
+.pathTable td { word-break: break-all; }

@@ -1,0 +1,19 @@
+node_modules/
+dist/
+src-tauri/target/
+# Local verification artefacts, not part of the source tree.
+screenshot.png
+desktop-window.png
+
+# Local verification artefacts and build logs.
+*.log
+home.png
+replay-split.png
+settings-datadir.png
+user-launch.png
+window-fresh.png
+inst-fresh.png
+target-launch.png
+storage-line.png
+build-log.txt
+build2.log

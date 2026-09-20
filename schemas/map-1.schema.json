@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://color-mines.local/schemas/map-1.json",
+  "title": "Color Mines map",
+  "description": "A single Color Mines board. formatVersion is the only version identifier; unknown fields are ignored, an unknown formatVersion is rejected.",
+  "type": "object",
+  "required": [
+    "formatVersion",
+    "mapId",
+    "width",
+    "height",
+    "colorCount",
+    "colors",
+    "mines",
+    "rowCounts",
+    "colCounts",
+    "rowBandOf",
+    "colBandOf"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "formatVersion": {
+      "const": 1
+    },
+    "mapId": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 2
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 2
+    },
+    "colorCount": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "colors": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "mines": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "rowCounts": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "colCounts": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "rowBandOf": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "colBandOf": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "name": {
+      "type": "string"
+    },
+    "seed": {
+      "type": [
+        "integer",
+        "string",
+        "null"
+      ]
+    }
+  }
+}

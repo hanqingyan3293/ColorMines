@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Color Mines 颜色扫雷</title>
+    <meta name="description" content="每种颜色恰好一个雷，每行每列显示雷的总数。" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <meta name="theme-color" content="#151922" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <h1>Color Mines</h1>
+        <p class="tagline" data-i18n="app.tagline"></p>
+      </div>
+      <nav id="nav" class="nav">
+        <button id="navHome" type="button" class="navBtn" data-view="home" data-i18n="nav.home"></button>
+        <button id="navPlay" type="button" class="navBtn" data-view="play" data-i18n="nav.play"></button>
+        <button id="navSettings" type="button" class="navBtn" data-view="settings" data-i18n="nav.settings"></button>
+        <button id="navHistory" type="button" class="navBtn" data-view="history" data-i18n="nav.history"></button>
+        <button id="navData" type="button" class="navBtn" data-view="data" data-i18n="nav.data"></button>
+      </nav>
+    </header>
+
+    <main class="layout">
+      <section id="viewHome" class="view">
+        <div class="hero">
+          <h2 data-i18n="home.title"></h2>
+          <p class="muted" data-i18n="home.subtitle"></p>
+        </div>
+
+        <div class="cardGrid">
+          <button id="cardPlay" type="button" class="entryCard primary">
+            <span class="entryIcon">&#9654;</span>
+            <span class="entryTitle" data-i18n="nav.play"></span>
+            <span class="entryDesc" data-i18n="home.playDesc"></span>
+          </button>
+          <button id="cardSettings" type="button" class="entryCard">
+            <span class="entryIcon">&#9881;</span>
+            <span class="entryTitle" data-i18n="nav.settings"></span>
+            <span class="entryDesc" data-i18n="home.settingsDesc"></span>
+          </button>
+          <button id="cardHistory" type="button" class="entryCard">
+            <span class="entryIcon">&#128337;</span>
+            <span class="entryTitle" data-i18n="nav.history"></span>
+            <span class="entryDesc" data-i18n="home.historyDesc"></span>
+          </button>
+          <button id="cardData" type="button" class="entryCard">
+            <span class="entryIcon">&#128190;</span>
+            <span class="entryTitle" data-i18n="nav.data"></span>
+            <span class="entryDesc" data-i18n="home.dataDesc"></span>
+          </button>
+        </div>
+
+        <div class="cardGrid">
+          <section class="card">
+            <h3 data-i18n="home.current"></h3>
+            <p id="homeConfig" class="mono"></p>
+            <div class="actions">
+              <button id="homeQuickStart" type="button" class="btn primary" data-i18n="action.newGame"></button>
+            </div>
+          </section>
+          <section class="card">
+            <h3 data-i18n="panel.rules"></h3>
+            <ul class="rules">
+              <li data-i18n="rule.dig"></li>
+              <li data-i18n="rule.mark"></li>
+              <li data-i18n="rule.oneFlag"></li>
+              <li data-i18n="rule.noReveal"></li>
+            </ul>
+          </section>
+        </div>
+      </section>
+
+      <!-- ------------------------------------------------------------ play -->
+      <section id="viewPlay" class="view">
+        <div id="playArea" class="boardPane">
+          <div class="playBar">
+            <div id="tiers" class="tiers"></div>
+            <button id="newGameBtn" type="button" class="btn" data-i18n="action.newGame"></button>
+          </div>
+
+          <div id="board" class="board"></div>
+
+          <div class="gameBar">
+            <button id="hintBtn" type="button" class="btn" data-i18n="action.hint"></button>
+            <button id="directHintBtn" type="button" class="btn" data-i18n="action.directHint"></button>
+            <button id="replayBtn" type="button" class="btn" data-i18n="action.replay"></button>
+            <button id="playSaveMap" type="button" class="btn" data-i18n="action.saveCurrent"></button>
+            <button id="exitGameBtn" type="button" class="btn ghost" data-i18n="action.exitGame"></button>
+          </div>
+
+          <div id="banner" class="banner" hidden></div>
+          <div id="statusLine" class="statusLine" data-i18n="status.ready"></div>
+
+          <dl class="hud compact">
+            <div><dt data-i18n="hud.time"></dt><dd id="hudTime">0:00</dd></div>
+            <div><dt data-i18n="hud.flags"></dt><dd id="hudFlags">0 / 0</dd></div>
+            <div><dt data-i18n="hud.reveals"></dt><dd id="hudReveals">0</dd></div>
+            <div><dt data-i18n="settings.storage"></dt><dd id="storageInfo" class="mono">-</dd></div>
+          </dl>
+          <p id="bestLine" class="bestLine"></p>
+          <div id="replayPanel" class="panel" hidden>
+            <div class="panelHead">
+              <strong data-i18n="replay.title"></strong>
+              <button id="replayExit" type="button" class="btn ghost" data-i18n="action.exitReplay"></button>
+            </div>
+
+
+            <p id="replayInfo" class="muted"></p>
+            <div id="replayList" class="list"></div>
+          </div>
+
+          <div id="debugPanel" class="panel" hidden>
+            <div class="panelHead"><strong data-i18n="debug.title"></strong></div>
+            <p id="debugInfo" class="muted mono"></p>
+            <label class="check">
+              <input id="debugShowMines" type="checkbox" />
+              <span data-i18n="debug.showMines"></span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- -------------------------------------------------------- settings -->
+      <section id="viewSettings" class="view" hidden>
+        <div class="grid">
+          <section class="card">
+            <h2 data-i18n="settings.board"></h2>
+            <label class="field"><span data-i18n="custom.width"></span><input id="setW" type="number" min="4" max="24" /></label>
+            <label class="field"><span data-i18n="custom.height"></span><input id="setH" type="number" min="4" max="24" /></label>
+            <label class="field"><span data-i18n="custom.mines"></span><input id="setK" type="number" min="2" max="40" /></label>
+            <label class="field"><span data-i18n="custom.band"></span><input id="setBand" type="number" min="1" max="3" /></label>
+            <label class="field"><span data-i18n="settings.timeout"></span><input id="setTimeout" type="number" min="200" max="60000" step="100" /></label>
+            <p class="muted" data-i18n="settings.timeoutHint"></p>
+            <p id="feasibility" class="feasibility"></p>
+          </section>
+
+          <section class="card">
+            <h2 data-i18n="settings.app"></h2>
+            <label class="field"><span data-i18n="panel.language"></span>
+              <select id="languageSelect">
+                <option value="auto" data-i18n="language.auto"></option>
+                <option value="zh-CN" data-i18n="language.zh"></option>
+                <option value="en-US" data-i18n="language.en"></option>
+              </select>
+            </label>
+            <label class="field"><span data-i18n="settings.historyLimit"></span><input id="setHistoryLimit" type="number" min="5" max="500" /></label>
+            <label class="check"><input id="setDebug" type="checkbox" /><span data-i18n="settings.debug"></span></label>
+            <p id="buildInfo" class="muted mono"></p>
+            <h4 data-i18n="settings.dataDir"></h4>
+            <p id="dataDirCurrent" class="mono muted"></p>
+            <div class="actions">
+              <button id="dataDirPick" type="button" class="btn" data-i18n="action.browse"></button>
+              <button id="dataDirReset" type="button" class="btn ghost" data-i18n="action.useDefault"></button>
+              <button id="dataDirMigrate" type="button" class="btn" data-i18n="action.migrate"></button>
+            </div>
+            <table class="pathTable">
+              <tbody>
+                <tr><th data-i18n="data.kind.settings"></th><td id="pathSettings" class="mono"></td></tr>
+                <tr><th data-i18n="data.kind.history"></th><td id="pathHistory" class="mono"></td></tr>
+                <tr><th data-i18n="data.kind.maps"></th><td id="pathMaps" class="mono"></td></tr>
+                <tr><th data-i18n="data.kind.logs"></th><td id="pathLogs" class="mono"></td></tr>
+                <tr><th data-i18n="data.kind.backups"></th><td id="pathBackups" class="mono"></td></tr>
+              </tbody>
+            </table>
+            <p class="muted" data-i18n="settings.dataDirHint"></p>
+
+          </section>
+
+          <section class="card">
+            <h2 data-i18n="panel.rules"></h2>
+            <ul class="rules">
+              <li data-i18n="rule.one"></li>
+              <li data-i18n="rule.totals"></li>
+              <li data-i18n="rule.band"></li>
+              <li data-i18n="rule.dig"></li>
+              <li data-i18n="rule.mark"></li>
+              <li data-i18n="rule.oneFlag"></li>
+              <li data-i18n="rule.noReveal"></li>
+            </ul>
+          </section>
+        </div>
+        <div class="actions">
+          <button id="settingsApply" type="button" class="btn primary" data-i18n="action.apply"></button>
+          <button id="settingsSave" type="button" class="btn" data-i18n="action.saveSettings"></button>
+          <span id="settingsSaved" class="muted" hidden data-i18n="settings.saved"></span>
+        </div>
+      </section>
+
+      <!-- --------------------------------------------------------- history -->
+      <section id="viewHistory" class="view" hidden>
+        <section class="card">
+          <div class="panelHead">
+            <h2 data-i18n="nav.history"></h2>
+            <button id="historyClear" type="button" class="btn ghost" data-i18n="action.clearHistory"></button>
+          </div>
+          <p id="historyStats" class="muted"></p>
+          <div id="historyList" class="list"></div>
+        </section>
+      </section>
+
+      <!-- ------------------------------------------------------------ data -->
+      <section id="viewData" class="view" hidden>
+        <div class="grid">
+          <section class="card">
+            <div class="panelHead">
+              <h2 data-i18n="data.maps"></h2>
+              <button id="mapSave" type="button" class="btn" data-i18n="action.saveCurrent"></button>
+            </div>
+            <div id="mapList" class="list"></div>
+          </section>
+
+          <section class="card">
+            <h2 data-i18n="data.transfer"></h2>
+            <div class="actions">
+              <button id="mapExport" type="button" class="btn" data-i18n="action.exportMap"></button>
+              <button id="mapImport" type="button" class="btn" data-i18n="action.importMap"></button>
+            </div>
+            <div class="actions">
+              <button id="backupBtn" type="button" class="btn" data-i18n="action.backup"></button>
+              <button id="restoreBtn" type="button" class="btn" data-i18n="action.restore"></button>
+            </div>
+            <label class="check"><input id="restoreSettings" type="checkbox" /><span data-i18n="data.overwriteSettings"></span></label>
+            <input id="fileInput" type="file" accept="application/json,.json" hidden />
+            <div id="restorePreview" class="panel" hidden>
+              <strong data-i18n="data.preview"></strong>
+              <p id="restoreSummary" class="muted"></p>
+              <div class="actions">
+                <button id="restoreConfirm" type="button" class="btn primary" data-i18n="action.confirmRestore"></button>
+                <button id="restoreCancel" type="button" class="btn ghost" data-i18n="action.cancel"></button>
+              </div>
+            </div>
+            <p id="dataStatus" class="muted"></p>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
