@@ -256,6 +256,12 @@ console.log('\n[调色板：颜色是玩法，不能重复]');
   const fills = new Set(PALETTE.map((p) => p.fill));
   check(fills.size === PALETTE.length, '不能有重复的色值');
   check(minPaletteDistance() >= 25, '任意两色最小距离应 >= 25，实际 ' + minPaletteDistance().toFixed(1));
+  // Hints and replay text name colours ("the crimson in row 1"), so two colours
+  // sharing a name would make them ambiguous - the hint would be useless.
+  const zhNames = PALETTE.map((p) => p.zh);
+  const enNames = PALETTE.map((p) => p.en);
+  check(new Set(zhNames).size === zhNames.length, '中文色名必须唯一');
+  check(new Set(enNames).size === enNames.length, '英文色名必须唯一');
   // Out-of-range must NOT silently reuse an earlier colour.
   check(swatch(9999) === UNKNOWN_SWATCH, '越界应回退到未知色而不是循环复用');
   check(swatch(17).fill !== swatch(1).fill, '第 17 色不能与第 1 色相同');
