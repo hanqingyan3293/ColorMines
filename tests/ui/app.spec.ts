@@ -182,3 +182,31 @@ test('生成超时可在设置里调整并生效', async ({ page }) => {
   await page.locator('#settingsSave').click();
   await expect(page.locator('#settingsSaved')).toBeVisible();
 });
+
+test('难度滑块与输入框共享数值，且输入框可突破滑块上限', async ({ page }) => {
+  await page.locator('#exitGameBtn').click();
+  await page.locator('#navHome').click();
+  await page.locator('#cardSettings').click();
+
+  const range = page.locator('#setDifficultyRange');
+  const box = page.locator('#setDifficulty');
+  await expect(range).toBeVisible();
+  await expect(box).toBeVisible();
+
+  // Slider -> box, and the resulting board is previewed.
+  await range.fill('65');
+  await range.dispatchEvent('input');
+  await expect(box).toHaveValue('65');
+  await expect(page.locator('#difficultyPreview')).toContainText('雷');
+
+  // Box -> slider (within range).
+  await box.fill('25');
+  await box.dispatchEvent('input');
+  await expect(range).toHaveValue('25');
+
+  // Typing past the slider maximum keeps the real value.
+  await box.fill('180');
+  await box.dispatchEvent('input');
+  await expect(range).toHaveValue('100');
+  await expect(box).toHaveValue('180');
+});
