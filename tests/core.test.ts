@@ -265,8 +265,9 @@ console.log('\n[皮肤校验]');
 {
   const good = {
     formatVersion: SKIN_FORMAT_VERSION, id: 'x', name: 'X',
-    ui: { bg: '#000000', surface: '#111111', surface2: '#222222', border: '#333333',
-          text: '#ffffff', muted: '#888888', accent: '#ff00ff', danger: '#ff0000' },
+    ui: { bg: '#000000', surface: '#111111', 'surface-2': '#222222', border: '#333333',
+          text: '#ffffff', muted: '#888888', accent: '#ff00ff', danger: '#ff0000',
+          success: '#00ff00' },
     cell: { radius: 2, gap: 3, size: 30, raised: false },
     glyphs: { unsure: '?', flagged: '#' },
   };

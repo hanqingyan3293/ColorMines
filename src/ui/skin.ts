@@ -33,7 +33,9 @@ export interface Skin {
   ui: {
     bg: string;
     surface: string;
-    surface2: string;
+    /** Must be written `surface-2`: that is the name the stylesheet reads. */
+    'surface-2': string;
+    success: string;
     border: string;
     text: string;
     muted: string;
@@ -92,7 +94,7 @@ export function validateSkin(value: unknown): Skin {
   if (typeof skin.id !== 'string' || !skin.id) throw new Error('skin.noId');
   if (typeof skin.name !== 'string' || !skin.name) throw new Error('skin.noName');
   if (!skin.ui || typeof skin.ui !== 'object') throw new Error('skin.noUi');
-  for (const key of ['bg', 'surface', 'border', 'text', 'accent'] as const) {
+  for (const key of ['bg', 'surface', 'surface-2', 'border', 'text', 'muted', 'accent', 'danger', 'success'] as const) {
     if (typeof skin.ui[key] !== 'string') throw new Error('skin.uiMissing-' + key);
   }
   if (!skin.cell || typeof skin.cell.size !== 'number') throw new Error('skin.noCell');
@@ -144,7 +146,8 @@ export const BUILTIN_SKINS: Skin[] = [
     id: 'builtin:classic',
     name: '经典',
     ui: {
-      bg: '#c0c0c0', surface: '#c0c0c0', surface2: '#a8a8a8', border: '#7b7b7b',
+      bg: '#c0c0c0', surface: '#c0c0c0', 'surface-2': '#a8a8a8', border: '#7b7b7b',
+      success: '#2e7d32',
       text: '#1a1a1a', muted: '#555555', accent: '#2f6f9f', danger: '#c62828',
     },
     cell: { radius: 0, gap: 2, size: 32, raised: true },
@@ -155,7 +158,8 @@ export const BUILTIN_SKINS: Skin[] = [
     id: 'builtin:dark',
     name: '暗夜',
     ui: {
-      bg: '#12151a', surface: '#1a1f26', surface2: '#232a33', border: '#2f3947',
+      bg: '#12151a', surface: '#1a1f26', 'surface-2': '#232a33', border: '#2f3947',
+      success: '#66bb6a',
       text: '#e6edf3', muted: '#8b98a5', accent: '#4c9be8', danger: '#ef5350',
     },
     cell: { radius: 6, gap: 3, size: 32, raised: false },
@@ -166,7 +170,8 @@ export const BUILTIN_SKINS: Skin[] = [
     id: 'builtin:light',
     name: '素白',
     ui: {
-      bg: '#f6f8fa', surface: '#ffffff', surface2: '#eef1f5', border: '#d6dce3',
+      bg: '#f6f8fa', surface: '#ffffff', 'surface-2': '#eef1f5', border: '#d6dce3',
+      success: '#2e7d32',
       text: '#1b1f24', muted: '#667080', accent: '#2f6f9f', danger: '#c62828',
     },
     cell: { radius: 8, gap: 4, size: 34, raised: false },
@@ -177,7 +182,8 @@ export const BUILTIN_SKINS: Skin[] = [
     id: 'builtin:contrast',
     name: '高对比',
     ui: {
-      bg: '#000000', surface: '#000000', surface2: '#1c1c1c', border: '#ffffff',
+      bg: '#000000', surface: '#000000', 'surface-2': '#1c1c1c', border: '#ffffff',
+      success: '#ffe600',
       text: '#ffffff', muted: '#d0d0d0', accent: '#ffe600', danger: '#ff5252',
     },
     cell: { radius: 4, gap: 4, size: 34, raised: false },
