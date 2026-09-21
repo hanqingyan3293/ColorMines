@@ -470,6 +470,27 @@ export class DataStore {
     return { mapsAdded, mapsSkipped, recordsAdded, recordsSkipped };
   }
 
+  // -- skins ---------------------------------------------------------------
+  //
+  // Stored as raw JSON text: the shape is a presentation concern and lives in
+  // the UI layer, so validation happens there and not here.
+
+  async saveSkinJson(id: string, text: string): Promise<void> {
+    await this.fs.write(`data/skins/${id}.json`, text);
+  }
+
+  async listSkinJson(): Promise<string[]> {
+    return (await this.fs.list('data/skins/')).filter((p) => p.endsWith('.json'));
+  }
+
+  async readSkinJson(id: string): Promise<string | null> {
+    return this.fs.read(`data/skins/${id}.json`);
+  }
+
+  async removeSkinJson(id: string): Promise<void> {
+    await this.fs.remove(`data/skins/${id}.json`);
+  }
+
   /** Appends to `data/logs/app.log`, keeping the file bounded. */
   async appendLog(line: string, keepLines = 200): Promise<void> {
     const path = 'data/logs/app.log';
@@ -522,7 +543,7 @@ export class TauriFs implements Fs {
     this.baseDir = root.endsWith('/') || root.endsWith('\\') ? root : root + '/';
     try {
       // The full layout from the spec: data/{maps,logs,backups}.
-      for (const dir of ['data/maps', 'data/logs', 'data/backups']) {
+      for (const dir of ['data/maps', 'data/logs', 'data/backups', 'data/skins']) {
         await invoke('fs_mkdir', { path: this.baseDir + dir });
       }
     } catch (error) {

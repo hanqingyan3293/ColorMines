@@ -20,7 +20,7 @@ import {
 } from './core/session.js';
 import { BoardView } from './ui/board-view.js';
 import {
-  BUILTIN_SKINS, applySkin, builtinSkin, skinPalette, type Skin,
+  BUILTIN_SKINS, applySkin, builtinSkin, skinPalette, validateSkin, type Skin,
 } from './ui/skin.js';
 import { describeHint, describeStep } from './ui/describe.js';
 import type { GenerateRequest, GenerateResponse } from './ui/worker.js';
@@ -405,6 +405,17 @@ async function renderDataPaths(): Promise<void> {
   }
 }
 
+el('skinExport').addEventListener('click', () => {
+  download('colormines-skin-' + activeSkin.id.replace(/[^a-z0-9]+/gi, '-') + '.json', activeSkin);
+  dataStatus.textContent = t('status.skinExported');
+});
+
+el('skinImport').addEventListener('click', () => {
+  pendingMode = 'skin';
+  fileInput.accept = 'application/json,.json';
+  fileInput.click();
+});
+
 el('dataDirPick').addEventListener('click', async () => {
   if (!isTauri()) {
     dataStatus.textContent = t('status.pickUnsupported');
@@ -491,16 +502,40 @@ function useSkin(skin: Skin): void {
   if (session) view.update(session);
 }
 
+let importedSkins: Skin[] = [];
+
+async function loadImportedSkins(): Promise<number> {
+  importedSkins = [];
+  for (const path of await store.listSkinJson()) {
+    const id = path.slice(path.lastIndexOf('/') + 1).replace(/\.json$/, '');
+    const text = await store.readSkinJson(id);
+    if (!text) continue;
+    try {
+      importedSkins.push(validateSkin(JSON.parse(text)));
+    } catch {
+      // A broken skin file must not break the settings page.
+      logWarn('skin', 'skipping invalid skin file ' + path);
+    }
+  }
+  return importedSkins.length;
+}
+
 function fillSkinOptions(): void {
   setSkin.innerHTML = '';
-  for (const skin of BUILTIN_SKINS) {
+  const add = (skin: Skin, group: string) => {
     const option = document.createElement('option');
     option.value = skin.id;
-    option.textContent = skin.name;
+    option.textContent = group + skin.name;
     setSkin.appendChild(option);
-  }
+  };
+  for (const skin of BUILTIN_SKINS) add(skin, '');
+  for (const skin of importedSkins) add(skin, '');
   setSkin.value = settings.skinId || BUILTIN_SKINS[1].id;
-  useSkin(builtinSkin(setSkin.value) ?? BUILTIN_SKINS[1]);
+  useSkin(findSkin(setSkin.value) ?? BUILTIN_SKINS[1]);
+}
+
+function findSkin(id: string): Skin | undefined {
+  return builtinSkin(id) ?? importedSkins.find((s) => s.id === id);
 }
 
 async function renderStorageInfo(): Promise<void> {
@@ -517,6 +552,7 @@ function fillSettings(): void {
   setH.value = String(shape.height);
   setK.value = String(shape.colorCount);
   fillSkinOptions();
+  void loadImportedSkins().then((count) => { if (count > 0) fillSkinOptions(); });
   // Show where the current custom setup sits on the difficulty ramp.
   const level = configToDifficulty(shape);
   difficultyRange.value = String(Math.min(Number(difficultyRange.max), level));
@@ -548,7 +584,7 @@ function readShape(): ShapePrefs {
 }
 
 setSkin.addEventListener('change', () => {
-  const skin = builtinSkin(setSkin.value);
+  const skin = findSkin(setSkin.value);
   if (!skin) return;
   useSkin(skin);
   // Persist immediately: a skin is an appearance preference, and leaving it
@@ -745,7 +781,7 @@ el('backupBtn').addEventListener('click', async () => {
   }
 });
 
-let pendingMode: 'map' | 'backup' = 'map';
+let pendingMode: 'map' | 'backup' | 'skin' = 'map';
 el('mapImport').addEventListener('click', () => {
   pendingMode = 'map';
   fileInput.click();
@@ -769,6 +805,17 @@ fileInput.addEventListener('change', async () => {
         ? t('status.imported', file.name)
         : t('status.importSkipped');
       await renderMaps();
+    } else if (pendingMode === 'skin') {
+      try {
+        const skin = validateSkin(parsed);
+        await store.saveSkinJson(skin.id, JSON.stringify(skin, null, 2));
+        dataStatus.textContent = t('status.skinImported', skin.name);
+        await loadImportedSkins();
+        fillSkinOptions();
+      } catch (error) {
+        dataStatus.textContent = t('status.skinRejected',
+          error instanceof Error ? error.message : String(error));
+      }
     } else {
       // Preview first — nothing is written until the user confirms (spec §18).
       pendingBackup = parsed as BackupBundle;

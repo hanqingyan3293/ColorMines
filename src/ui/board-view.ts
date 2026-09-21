@@ -37,23 +37,17 @@ function bandRanges(bandOf: Int32Array): BandRange[] {
 }
 
 export class BoardView {
-  private board: Board | null = null;
-  private cells: HTMLButtonElement[] = [];
-  /** Mouse button held during a sweep: 0 = mark, 2 = dig, null = not dragging. */
-  private dragButton: number | null = null;
   /** Mark glyphs, owned by the active skin so skins can restyle them. */
   private glyphs = { unsure: '?', flagged: '\u2691' };
   /** Board colours, overridable by the active skin. */
   private palette: readonly Swatch[] = PALETTE;
-  private dragged = new Set<number>();
+  private board: Board | null = null;
+  private cells: HTMLButtonElement[] = [];
 
   constructor(
     private readonly root: HTMLElement,
     private readonly handlers: BoardViewHandlers,
   ) {
-    // Release anywhere: the pointer often leaves the grid before mouseup.
-    window.addEventListener('pointerup', () => this.endDrag());
-    window.addEventListener('pointercancel', () => this.endDrag());
     root.addEventListener('contextmenu', (event) => event.preventDefault());
   }
 
@@ -65,11 +59,6 @@ export class BoardView {
   /** Swaps the mark glyphs; the caller repaints with the session it holds. */
   setGlyphs(glyphs: { unsure: string; flagged: string }): void {
     this.glyphs = glyphs;
-  }
-
-  private endDrag(): void {
-    this.dragButton = null;
-    this.dragged.clear();
   }
 
   setBoard(board: Board): void {
@@ -116,17 +105,11 @@ export class BoardView {
     });
 
     // Hold and drag: sweeping across cells repeats the same action, which is far
-    // faster than clicking dozens of cells one by one.
-    cell.addEventListener('pointerdown', (event) => {
-      if (event.button !== 0 && event.button !== 2) return;
-      this.dragButton = event.button;
-      this.dragged = new Set([index]);
-    });
-    cell.addEventListener('pointerenter', () => {
-      if (this.dragButton === null || this.dragged.has(index)) return;
-      this.dragged.add(index);
-      if (this.dragButton === 0) this.handlers.onMark(index);
-      else this.handlers.onReveal(index);
+    // faster than clicking dozens of cells one by one. `event.buttons` is the
+    // native bitmask, so there is no drag state that can get stuck.
+    cell.addEventListener('mouseenter', (event) => {
+      if (event.buttons & 1) this.handlers.onMark(index);
+      else if (event.buttons & 2) this.handlers.onReveal(index);
     });
     this.cells.push(cell);
     return cell;

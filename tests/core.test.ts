@@ -9,6 +9,7 @@ import { generateBoard } from '../src/core/generator.js';
 import { makeBoard, validateBoard, unitBanding, type BoardShape } from '../src/core/board.js';
 import { difficultyToConfig, configToDifficulty } from '../src/core/tiers.js';
 import { PALETTE, UNKNOWN_SWATCH, minPaletteDistance, swatch } from '../src/ui/palette.js';
+import { BUILTIN_SKINS, SKIN_FORMAT_VERSION, paletteSeparation, validateSkin } from '../src/ui/skin.js';
 import { countSolutions } from '../src/core/solver-exact.js';
 import { solveLogical } from '../src/core/solver-logical.js';
 import { TIERS } from '../src/core/tiers.js';
@@ -258,6 +259,34 @@ console.log('\n[调色板：颜色是玩法，不能重复]');
   // Out-of-range must NOT silently reuse an earlier colour.
   check(swatch(9999) === UNKNOWN_SWATCH, '越界应回退到未知色而不是循环复用');
   check(swatch(17).fill !== swatch(1).fill, '第 17 色不能与第 1 色相同');
+}
+
+console.log('\n[皮肤校验]');
+{
+  const good = {
+    formatVersion: SKIN_FORMAT_VERSION, id: 'x', name: 'X',
+    ui: { bg: '#000000', surface: '#111111', surface2: '#222222', border: '#333333',
+          text: '#ffffff', muted: '#888888', accent: '#ff00ff', danger: '#ff0000' },
+    cell: { radius: 2, gap: 3, size: 30, raised: false },
+    glyphs: { unsure: '?', flagged: '#' },
+  };
+  check(validateSkin(good).id === 'x', '合法皮肤应通过校验');
+
+  const throws = (payload: unknown, needle: string) => {
+    try { validateSkin(payload); return false; }
+    catch (e) { return String((e as Error).message).includes(needle); }
+  };
+  check(throws({ ...good, formatVersion: 99 }, 'skin.version-99'), '版本不符应被拒绝');
+  check(throws({ ...good, name: '' }, 'skin.noName'), '缺名字应被拒绝');
+  check(throws({ ...good, ui: { bg: '#000000' } }, 'skin.uiMissing'), '缺 UI 字段应被拒绝');
+  check(throws({ ...good, palette: [{ fill: '#111111' }, { fill: '#121212' }] }, 'skin.tooSimilar'),
+    '配色过于接近应被拒绝（颜色是玩法）');
+  check(throws({ ...good, palette: [{ fill: 'red' }, { fill: '#00ff00' }] }, 'skin.badColour'),
+    '非法色值应被拒绝');
+
+  check(BUILTIN_SKINS.length >= 4, '至少内置 4 套皮肤');
+  check(BUILTIN_SKINS.every((s) => validateSkin(s).id === s.id), '每套内置皮肤都应能通过校验');
+  check(paletteSeparation([]) === 0, '空调色板距离应为 0');
 }
 
 console.log(`\n${checks - failures}/${checks} 通过`);
