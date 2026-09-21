@@ -5,6 +5,8 @@ const cells = (page: import('@playwright/test').Page) => page.locator('.cell');
 test.beforeEach(async ({ page }) => {
   // The app opens on the home view now, so start a round before testing the board.
   await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
   await page.waitForSelector('.entryCard');
   await page.locator('#cardPlay').click();
   await page.waitForSelector('.cell');
@@ -209,4 +211,36 @@ test('难度滑块与输入框共享数值，且输入框可突破滑块上限',
   await box.dispatchEvent('input');
   await expect(range).toHaveValue('100');
   await expect(box).toHaveValue('180');
+});
+
+test('切换皮肤会改变界面配色、格子尺寸与标记符号', async ({ page }) => {
+  await page.locator('#exitGameBtn').click();
+  await page.locator('#navHome').click();
+  await page.locator('#cardSettings').click();
+
+  const readSkin = () =>
+    page.evaluate(() => ({
+      bg: getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),
+      cell: getComputedStyle(document.documentElement).getPropertyValue('--cell').trim(),
+      raised: document.documentElement.dataset.skinRaised,
+    }));
+
+  await page.locator('#setSkin').selectOption({ label: '经典' });
+  const classic = await readSkin();
+  await page.locator('#setSkin').selectOption({ label: '暗夜' });
+  const dark = await readSkin();
+
+  expect(classic.bg).not.toEqual(dark.bg);
+  expect(classic.raised).toEqual('1');
+  expect(dark.raised).toEqual('0');
+
+  // The high-contrast skin also swaps the flag glyph.
+  await page.locator('#setSkin').selectOption({ label: '高对比' });
+  await page.locator('#navPlay').click();
+  await page.waitForSelector('.cell');
+  const cell = page.locator('.cell').nth(3);
+  await cell.click();
+  await expect(cell).toHaveText('?');
+  await cell.click();
+  await expect(cell).toHaveText('✕');
 });

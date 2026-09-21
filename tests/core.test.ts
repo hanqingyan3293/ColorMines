@@ -8,6 +8,7 @@
 import { generateBoard } from '../src/core/generator.js';
 import { makeBoard, validateBoard, unitBanding, type BoardShape } from '../src/core/board.js';
 import { difficultyToConfig, configToDifficulty } from '../src/core/tiers.js';
+import { PALETTE, UNKNOWN_SWATCH, minPaletteDistance, swatch } from '../src/ui/palette.js';
 import { countSolutions } from '../src/core/solver-exact.js';
 import { solveLogical } from '../src/core/solver-logical.js';
 import { TIERS } from '../src/core/tiers.js';
@@ -246,6 +247,17 @@ console.log('\n[难度滑块：雷数随刻度单调不降]');
   check(beyond.width <= 24 && beyond.colorCount >= 2, '超出上限应被夹紧到合法范围');
   check(configToDifficulty({ width: 12, height: 12, colorCount: 10, maxBand: 1 }) > 40,
     '反查应把 12x12/10 雷定位在中高难度');
+}
+
+console.log('\n[调色板：颜色是玩法，不能重复]');
+{
+  check(PALETTE.length >= 40, '调色板至少要覆盖 40 色，实际 ' + PALETTE.length);
+  const fills = new Set(PALETTE.map((p) => p.fill));
+  check(fills.size === PALETTE.length, '不能有重复的色值');
+  check(minPaletteDistance() >= 25, '任意两色最小距离应 >= 25，实际 ' + minPaletteDistance().toFixed(1));
+  // Out-of-range must NOT silently reuse an earlier colour.
+  check(swatch(9999) === UNKNOWN_SWATCH, '越界应回退到未知色而不是循环复用');
+  check(swatch(17).fill !== swatch(1).fill, '第 17 色不能与第 1 色相同');
 }
 
 console.log(`\n${checks - failures}/${checks} 通过`);

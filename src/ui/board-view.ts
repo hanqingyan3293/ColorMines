@@ -13,7 +13,7 @@
 import type { Board } from '../core/board.js';
 import type { ReplayState } from '../core/hint.js';
 import { Mark, type Session } from '../core/session.js';
-import { swatch } from './palette.js';
+import { PALETTE, swatch, type Swatch } from './palette.js';
 import { language, t } from '../i18n/index.js';
 
 export interface BoardViewHandlers {
@@ -41,6 +41,10 @@ export class BoardView {
   private cells: HTMLButtonElement[] = [];
   /** Mouse button held during a sweep: 0 = mark, 2 = dig, null = not dragging. */
   private dragButton: number | null = null;
+  /** Mark glyphs, owned by the active skin so skins can restyle them. */
+  private glyphs = { unsure: '?', flagged: '\u2691' };
+  /** Board colours, overridable by the active skin. */
+  private palette: readonly Swatch[] = PALETTE;
   private dragged = new Set<number>();
 
   constructor(
@@ -51,6 +55,16 @@ export class BoardView {
     window.addEventListener('pointerup', () => this.endDrag());
     window.addEventListener('pointercancel', () => this.endDrag());
     root.addEventListener('contextmenu', (event) => event.preventDefault());
+  }
+
+  /** Swaps the board palette; the caller repaints with the session it holds. */
+  setPalette(palette: readonly Swatch[]): void {
+    this.palette = palette;
+  }
+
+  /** Swaps the mark glyphs; the caller repaints with the session it holds. */
+  setGlyphs(glyphs: { unsure: string; flagged: string }): void {
+    this.glyphs = glyphs;
   }
 
   private endDrag(): void {
@@ -131,7 +145,7 @@ export class BoardView {
     for (let i = 0; i < this.cells.length; i++) {
       const cell = this.cells[i];
       const color = this.board.colors[i];
-      const paint = swatch(color);
+      const paint = this.palette[color] ?? swatch(color);
       const mark = session.marks[i];
 
       cell.style.setProperty('--fill', paint.fill);
@@ -148,7 +162,9 @@ export class BoardView {
       const name = language() === 'zh-CN' ? paint.zh : paint.en;
       cell.setAttribute('aria-label', t('cell.label',
         Math.floor(i / this.board.width) + 1, (i % this.board.width) + 1, name, state));
-      cell.textContent = mark === Mark.Flagged ? '\u2691' : mark === Mark.Unsure ? '?' : '';
+      cell.textContent = mark === Mark.Flagged
+        ? this.glyphs.flagged
+        : mark === Mark.Unsure ? this.glyphs.unsure : '';
     }
   }
 

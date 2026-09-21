@@ -120,6 +120,8 @@ export interface Settings {
   timeoutMs: number;
   /** Where to keep data; empty means the platform default. */
   dataDir: string;
+  /** Active skin id (`builtin:<name>`, or an imported skin's uuid). */
+  skinId: string;
   debug: boolean;
   lastShape: ShapePrefs;
 }
@@ -129,6 +131,7 @@ export const DEFAULT_SETTINGS: Settings = {
   historyLimit: 20,
   timeoutMs: 5000,
   dataDir: '',
+  skinId: 'builtin:dark',
   debug: false,
   lastShape: { width: 10, height: 10, colorCount: 8, maxBand: 1 },
 };

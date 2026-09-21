@@ -19,6 +19,9 @@ import {
   reveal, type Session,
 } from './core/session.js';
 import { BoardView } from './ui/board-view.js';
+import {
+  BUILTIN_SKINS, applySkin, builtinSkin, skinPalette, type Skin,
+} from './ui/skin.js';
 import { describeHint, describeStep } from './ui/describe.js';
 import type { GenerateRequest, GenerateResponse } from './ui/worker.js';
 import {
@@ -66,6 +69,7 @@ const playArea = el('playArea');
 const restorePreview = el('restorePreview');
 const restoreSummary = el('restoreSummary');
 
+const setSkin = el<HTMLSelectElement>('setSkin');
 const difficultyRange = el<HTMLInputElement>('setDifficultyRange');
 const difficultyInput = el<HTMLInputElement>('setDifficulty');
 const difficultyPreview = el('difficultyPreview');
@@ -476,6 +480,29 @@ function syncDifficulty(source: 'slider' | 'box'): void {
   }
 }
 
+let activeSkin: Skin = BUILTIN_SKINS[1];
+
+/** Applies a skin everywhere: CSS vars, glyphs, and a board repaint. */
+function useSkin(skin: Skin): void {
+  activeSkin = skin;
+  applySkin(skin);
+  view.setGlyphs(skin.glyphs);
+  view.setPalette(skinPalette(skin));
+  if (session) view.update(session);
+}
+
+function fillSkinOptions(): void {
+  setSkin.innerHTML = '';
+  for (const skin of BUILTIN_SKINS) {
+    const option = document.createElement('option');
+    option.value = skin.id;
+    option.textContent = skin.name;
+    setSkin.appendChild(option);
+  }
+  setSkin.value = settings.skinId || BUILTIN_SKINS[1].id;
+  useSkin(builtinSkin(setSkin.value) ?? BUILTIN_SKINS[1]);
+}
+
 async function renderStorageInfo(): Promise<void> {
   const info = document.getElementById('storageInfo');
   if (info) info.textContent = await store.describe();
@@ -489,6 +516,7 @@ function fillSettings(): void {
   setW.value = String(shape.width);
   setH.value = String(shape.height);
   setK.value = String(shape.colorCount);
+  fillSkinOptions();
   // Show where the current custom setup sits on the difficulty ramp.
   const level = configToDifficulty(shape);
   difficultyRange.value = String(Math.min(Number(difficultyRange.max), level));
@@ -519,6 +547,15 @@ function readShape(): ShapePrefs {
   };
 }
 
+setSkin.addEventListener('change', () => {
+  const skin = builtinSkin(setSkin.value);
+  if (!skin) return;
+  useSkin(skin);
+  // Persist immediately: a skin is an appearance preference, and leaving it
+  // unsaved would snap back the moment a new round starts.
+  settings = { ...settings, skinId: skin.id };
+  void store.saveSettings(settings);
+});
 for (const input of [setW, setH, setK, setBand]) input.addEventListener('input', refreshFeasibility);
 difficultyRange.addEventListener('input', () => syncDifficulty('slider'));
 difficultyInput.addEventListener('input', () => syncDifficulty('box'));
@@ -529,6 +566,7 @@ function collectSettings(): Settings {
     historyLimit: Math.min(500, Math.max(5, Number(setHistoryLimit.value) || 20)),
     timeoutMs: Math.min(60000, Math.max(200, Number(setTimeoutInput.value) || 5000)),
     dataDir: pickedDataDir,
+    skinId: setSkin.value,
     debug: setDebugBox.checked,
     lastShape: readShape(),
   };
@@ -808,6 +846,7 @@ function renderDebug(): void {
     session.board.rowBandOf, session.board.colBandOf);
   const parts = [
     t('debug.map', currentMapId.slice(0, 8)),
+    t('debug.skin', activeSkin.name),
     t('debug.size', session.board.width, session.board.height, session.board.colorCount),
     t('debug.seed', String(lastGeneration.seed)),
     t('debug.bands', Array.from(session.board.rowBandOf).join(''), Array.from(session.board.colBandOf).join('')),
