@@ -20,7 +20,8 @@ import {
 } from './core/session.js';
 import { BoardView } from './ui/board-view.js';
 import {
-  BUILTIN_SKINS, applySkin, builtinSkin, skinPalette, validateSkin, type Skin,
+  BUILTIN_SKINS, SKIN_STYLES, applySkin, builtinSkin, skinPalette, validateSkin,
+  type Skin, type SkinAxis, type SkinStyle,
 } from './ui/skin.js';
 import { describeHint, describeStep } from './ui/describe.js';
 import type { GenerateRequest, GenerateResponse } from './ui/worker.js';
@@ -70,6 +71,9 @@ const restorePreview = el('restorePreview');
 const restoreSummary = el('restoreSummary');
 
 const setSkin = el<HTMLSelectElement>('setSkin');
+const setUiStyle = el<HTMLSelectElement>('setUiStyle');
+const setBoardStyle = el<HTMLSelectElement>('setBoardStyle');
+const setCellStyle = el<HTMLSelectElement>('setCellStyle');
 const difficultyRange = el<HTMLInputElement>('setDifficultyRange');
 const difficultyInput = el<HTMLInputElement>('setDifficulty');
 const difficultyPreview = el('difficultyPreview');
@@ -520,6 +524,23 @@ async function loadImportedSkins(): Promise<number> {
   return importedSkins.length;
 }
 
+function fillStyleOptions(select: HTMLSelectElement, current: SkinAxis): void {
+  select.innerHTML = '';
+  for (const style of SKIN_STYLES) {
+    const option = document.createElement('option');
+    option.value = style;
+    option.textContent = t('style.' + style);
+    select.appendChild(option);
+  }
+  select.value = current.style;
+}
+
+/** Restyles one axis of the active skin without touching the others. */
+function applyAxis(which: 'ui' | 'board' | 'cell', style: SkinStyle): void {
+  activeSkin = { ...activeSkin, axes: { ...activeSkin.axes, [which]: { style } } };
+  useSkin(activeSkin);
+}
+
 function fillSkinOptions(): void {
   setSkin.innerHTML = '';
   const add = (skin: Skin, group: string) => {
@@ -532,6 +553,9 @@ function fillSkinOptions(): void {
   for (const skin of importedSkins) add(skin, '');
   setSkin.value = settings.skinId || BUILTIN_SKINS[1].id;
   useSkin(findSkin(setSkin.value) ?? BUILTIN_SKINS[1]);
+  fillStyleOptions(setUiStyle, activeSkin.axes.ui);
+  fillStyleOptions(setBoardStyle, activeSkin.axes.board);
+  fillStyleOptions(setCellStyle, activeSkin.axes.cell);
 }
 
 function findSkin(id: string): Skin | undefined {
@@ -592,6 +616,9 @@ setSkin.addEventListener('change', () => {
   settings = { ...settings, skinId: skin.id };
   void store.saveSettings(settings);
 });
+setUiStyle.addEventListener('change', () => applyAxis('ui', setUiStyle.value as SkinStyle));
+setBoardStyle.addEventListener('change', () => applyAxis('board', setBoardStyle.value as SkinStyle));
+setCellStyle.addEventListener('change', () => applyAxis('cell', setCellStyle.value as SkinStyle));
 for (const input of [setW, setH, setK, setBand]) input.addEventListener('input', refreshFeasibility);
 difficultyRange.addEventListener('input', () => syncDifficulty('slider'));
 difficultyInput.addEventListener('input', () => syncDifficulty('box'));

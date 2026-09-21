@@ -15,7 +15,22 @@
 
 import { PALETTE } from './palette.js';
 
-export const SKIN_FORMAT_VERSION = 1;
+export const SKIN_FORMAT_VERSION = 2;
+
+/**
+ * Visual style of one surface. A skin styles three independent surfaces
+ * (shell / board / cells), so they can be mixed - mica shell, glass board,
+ * card cells, and so on.
+ */
+export type SkinStyle = 'flat' | 'card' | 'paper' | 'glass' | 'mica' | 'image';
+
+export const SKIN_STYLES: SkinStyle[] = ['flat', 'card', 'paper', 'glass', 'mica', 'image'];
+
+export interface SkinAxis {
+  style: SkinStyle;
+  /** Background image URL, used when style is 'image'. */
+  image?: string;
+}
 
 export interface SkinSwatch {
   fill: string;
@@ -54,6 +69,8 @@ export interface Skin {
     /** Bevelled (classic Minesweeper) look when true. */
     raised: boolean;
   };
+  /** Style of each surface, chosen independently. */
+  axes: { ui: SkinAxis; board: SkinAxis; cell: SkinAxis };
   /** Mark glyphs, so a skin can swap ? / flag for anything it likes. */
   glyphs: { unsure: string; flagged: string };
   /** Set when the palette was checked for colour-vision deficiency. */
@@ -98,6 +115,11 @@ export function validateSkin(value: unknown): Skin {
     if (typeof skin.ui[key] !== 'string') throw new Error('skin.uiMissing-' + key);
   }
   if (!skin.cell || typeof skin.cell.size !== 'number') throw new Error('skin.noCell');
+  if (!skin.axes?.ui || !skin.axes.board || !skin.axes.cell) throw new Error('skin.noAxes');
+  for (const axis of [skin.axes.ui, skin.axes.board, skin.axes.cell]) {
+    if (!SKIN_STYLES.includes(axis.style)) throw new Error('skin.badStyle');
+    if (axis.style === 'image' && typeof axis.image !== 'string') throw new Error('skin.noImage');
+  }
 
   if (skin.palette !== undefined) {
     if (!Array.isArray(skin.palette) || skin.palette.length < 2) {
@@ -127,6 +149,20 @@ export function applySkin(skin: Skin): void {
   root.style.setProperty('--cell-gap', skin.cell.gap + 'px');
   root.dataset.skinRaised = skin.cell.raised ? '1' : '0';
   root.dataset.skinId = skin.id;
+
+  // Three surfaces, styled independently.
+  root.dataset.uiStyle = skin.axes.ui.style;
+  const board = document.getElementById('board');
+  if (board) board.dataset.boardStyle = skin.axes.board.style;
+  (board ?? root).dataset.cellStyle = skin.axes.cell.style;
+
+  const paint = (name: string, axis: SkinAxis) => {
+    root.style.setProperty('--' + name + '-image',
+      axis.style === 'image' && axis.image ? `url("${axis.image}")` : 'none');
+  };
+  paint('ui', skin.axes.ui);
+  paint('board', skin.axes.board);
+  paint('cell', skin.axes.cell);
 }
 
 /** Palette used for rendering, with names falling back to the built-in ones. */
@@ -151,6 +187,7 @@ export const BUILTIN_SKINS: Skin[] = [
       text: '#1a1a1a', muted: '#555555', accent: '#2f6f9f', danger: '#c62828',
     },
     cell: { radius: 0, gap: 2, size: 32, raised: true },
+    axes: { ui: { style: 'flat' }, board: { style: 'flat' }, cell: { style: 'flat' } },
     glyphs: { unsure: '?', flagged: '⚑' },
   },
   {
@@ -163,6 +200,7 @@ export const BUILTIN_SKINS: Skin[] = [
       text: '#e6edf3', muted: '#8b98a5', accent: '#4c9be8', danger: '#ef5350',
     },
     cell: { radius: 6, gap: 3, size: 32, raised: false },
+    axes: { ui: { style: 'card' }, board: { style: 'card' }, cell: { style: 'card' } },
     glyphs: { unsure: '?', flagged: '⚑' },
   },
   {
@@ -175,6 +213,7 @@ export const BUILTIN_SKINS: Skin[] = [
       text: '#1b1f24', muted: '#667080', accent: '#2f6f9f', danger: '#c62828',
     },
     cell: { radius: 8, gap: 4, size: 34, raised: false },
+    axes: { ui: { style: 'paper' }, board: { style: 'paper' }, cell: { style: 'paper' } },
     glyphs: { unsure: '?', flagged: '⚑' },
   },
   {
@@ -187,10 +226,40 @@ export const BUILTIN_SKINS: Skin[] = [
       text: '#ffffff', muted: '#d0d0d0', accent: '#ffe600', danger: '#ff5252',
     },
     cell: { radius: 4, gap: 4, size: 34, raised: false },
+    axes: { ui: { style: 'flat' }, board: { style: 'mica' }, cell: { style: 'glass' } },
     glyphs: { unsure: '?', flagged: '✕' },
     colorBlindSafe: true,
   },
 ];
+
+BUILTIN_SKINS.push(
+  {
+    formatVersion: SKIN_FORMAT_VERSION,
+    id: 'builtin:glass',
+    name: '琉璃',
+    ui: {
+      bg: '#101826', surface: 'rgba(255,255,255,0.08)', 'surface-2': 'rgba(255,255,255,0.14)',
+      border: 'rgba(255,255,255,0.22)', text: '#eaf2ff', muted: '#a9b6c8',
+      accent: '#7cc4ff', danger: '#ff6b6b', success: '#7ee0a1',
+    },
+    cell: { radius: 10, gap: 4, size: 34, raised: false },
+    axes: { ui: { style: 'glass' }, board: { style: 'glass' }, cell: { style: 'glass' } },
+    glyphs: { unsure: '?', flagged: '⚑' },
+  },
+  {
+    formatVersion: SKIN_FORMAT_VERSION,
+    id: 'builtin:mica',
+    name: '云母',
+    ui: {
+      bg: '#f2f3f6', surface: 'rgba(255,255,255,0.72)', 'surface-2': 'rgba(255,255,255,0.55)',
+      border: 'rgba(0,0,0,0.10)', text: '#1a1c1f', muted: '#5c6470',
+      accent: '#3f7fd6', danger: '#c62828', success: '#2e7d32',
+    },
+    cell: { radius: 8, gap: 3, size: 34, raised: false },
+    axes: { ui: { style: 'mica' }, board: { style: 'card' }, cell: { style: 'card' } },
+    glyphs: { unsure: '?', flagged: '⚑' },
+  },
+);
 
 export function builtinSkin(id: string): Skin | undefined {
   return BUILTIN_SKINS.find((s) => s.id === id);

@@ -269,6 +269,7 @@ console.log('\n[皮肤校验]');
           text: '#ffffff', muted: '#888888', accent: '#ff00ff', danger: '#ff0000',
           success: '#00ff00' },
     cell: { radius: 2, gap: 3, size: 30, raised: false },
+    axes: { ui: { style: 'card' }, board: { style: 'glass' }, cell: { style: 'mica' } },
     glyphs: { unsure: '?', flagged: '#' },
   };
   check(validateSkin(good).id === 'x', '合法皮肤应通过校验');
@@ -285,7 +286,15 @@ console.log('\n[皮肤校验]');
   check(throws({ ...good, palette: [{ fill: 'red' }, { fill: '#00ff00' }] }, 'skin.badColour'),
     '非法色值应被拒绝');
 
-  check(BUILTIN_SKINS.length >= 4, '至少内置 4 套皮肤');
+  check(throws({ ...good, axes: { ui: { style: 'card' } } }, 'skin.noAxes'), '缺三轴定义应被拒绝');
+  check(throws({ ...good, axes: { ui: { style: 'nope' }, board: { style: 'card' }, cell: { style: 'card' } } },
+    'skin.badStyle'), '未知风格应被拒绝');
+  check(throws({ ...good, axes: { ui: { style: 'image' }, board: { style: 'card' }, cell: { style: 'card' } } },
+    'skin.noImage'), '图片风格缺图应被拒绝');
+
+  check(BUILTIN_SKINS.length >= 6, '至少内置 6 套皮肤，实际 ' + BUILTIN_SKINS.length);
+  check(BUILTIN_SKINS.some((s) => s.axes.ui.style !== s.axes.board.style),
+    '应有混搭示例（三轴可独立选择）');
   check(BUILTIN_SKINS.every((s) => validateSkin(s).id === s.id), '每套内置皮肤都应能通过校验');
   check(paletteSeparation([]) === 0, '空调色板距离应为 0');
 }

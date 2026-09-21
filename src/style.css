@@ -367,3 +367,49 @@ body {
   color: var(--text);
   text-align: right;
 }
+
+/* ---- surface styles: shell / board / cells, chosen independently ---------- */
+
+/* Shell */
+[data-ui-style='card'] .card,
+[data-ui-style='card'] .entryCard,
+[data-ui-style='card'] .panel { box-shadow: 0 1px 2px rgba(0,0,0,.18), 0 8px 24px rgba(0,0,0,.10); }
+
+[data-ui-style='paper'] body { background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.025) 0 1px, transparent 1px 4px); }
+[data-ui-style='paper'] .card,
+[data-ui-style='paper'] .entryCard { box-shadow: 0 1px 1px rgba(0,0,0,.12); border-radius: 2px; }
+
+[data-ui-style='glass'] .card,
+[data-ui-style='glass'] .entryCard,
+[data-ui-style='glass'] .panel,
+[data-ui-style='glass'] .topbar { backdrop-filter: blur(14px) saturate(140%); }
+
+[data-ui-style='mica'] body { background-image: radial-gradient(1200px 600px at 20% -10%, rgba(255,255,255,.7), transparent), radial-gradient(900px 500px at 90% 110%, rgba(0,0,0,.06), transparent); }
+[data-ui-style='mica'] .card,
+[data-ui-style='mica'] .entryCard { backdrop-filter: blur(20px); box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+
+[data-ui-style='image'] body { background-image: var(--ui-image); background-size: cover; background-position: center; }
+[data-ui-style='image'] .card,
+[data-ui-style='image'] .entryCard { backdrop-filter: blur(8px); }
+
+/* Board */
+[data-board-style='card'] #board { padding: 10px; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+[data-board-style='paper'] #board { padding: 8px; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,.14); }
+[data-board-style='glass'] #board { padding: 10px; border-radius: 16px; backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,.18); }
+[data-board-style='mica'] #board { padding: 10px; border-radius: 14px; backdrop-filter: blur(18px); }
+[data-board-style='image'] #board { padding: 10px; background-image: var(--board-image); background-size: cover; border-radius: 12px; }
+
+/* Cells */
+#board[data-cell-style='card'] .cell { box-shadow: 0 1px 3px rgba(0,0,0,.22); border-radius: calc(var(--cell-radius) + 2px); }
+#board[data-cell-style='paper'] .cell { box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); border-radius: 1px; }
+#board[data-cell-style='glass'] .cell { backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,.20); }
+#board[data-cell-style='mica'] .cell { backdrop-filter: blur(8px); box-shadow: inset 0 1px 0 rgba(255,255,255,.35); }
+#board[data-cell-style='image'] .cell { background-image: var(--cell-image); background-size: cover; }
+
+/* Raised (classic Minesweeper bevel) still applies on top of any style. */
+[data-skin-raised='1'] .cell:not(.revealed) {
+  border-top: 2px solid rgba(255,255,255,.7);
+  border-left: 2px solid rgba(255,255,255,.7);
+  border-right: 2px solid rgba(0,0,0,.30);
+  border-bottom: 2px solid rgba(0,0,0,.30);
+}
