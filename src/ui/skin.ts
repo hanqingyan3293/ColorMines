@@ -14,6 +14,9 @@
  */
 
 import { PALETTE } from './palette.js';
+import {
+  MIN_MUTED_CONTRAST, MIN_TEXT_CONTRAST, contrastRatio,
+} from './contrast.js';
 
 export const SKIN_FORMAT_VERSION = 2;
 
@@ -119,6 +122,20 @@ export function validateSkin(value: unknown): Skin {
   for (const axis of [skin.axes.ui, skin.axes.board, skin.axes.cell]) {
     if (!SKIN_STYLES.includes(axis.style)) throw new Error('skin.badStyle');
     if (axis.style === 'image' && typeof axis.image !== 'string') throw new Error('skin.noImage');
+  }
+
+  // Readability is measured, not eyeballed. Translucent colours cannot be
+  // measured without knowing what sits behind them, so they skip the check
+  // rather than producing NaN and silently passing.
+  const measurable = (a: string, b: string) =>
+    /^#[0-9a-f]{6}$/i.test(a) && /^#[0-9a-f]{6}$/i.test(b);
+  if (measurable(skin.ui.text, skin.ui.bg)
+      && contrastRatio(skin.ui.text, skin.ui.bg) < MIN_TEXT_CONTRAST) {
+    throw new Error('skin.lowContrast-text');
+  }
+  if (measurable(skin.ui.muted, skin.ui.surface)
+      && contrastRatio(skin.ui.muted, skin.ui.surface) < MIN_MUTED_CONTRAST) {
+    throw new Error('skin.lowContrast-muted');
   }
 
   if (skin.palette !== undefined) {
