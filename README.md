@@ -112,7 +112,7 @@ data/
 
 ## 许可
 
-[MIT](LICENSE)。第三方依赖见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。
+[GNU Affero General Public License v3.0](LICENSE)（AGPL-3.0）。第三方依赖见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。
 
 ## 更新日志
 
