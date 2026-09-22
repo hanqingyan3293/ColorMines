@@ -211,9 +211,17 @@ body {
 .field input, .field select {
   width: 92px; padding: 6px 8px;
   border-radius: 6px; border: 1px solid var(--border);
-  background: var(--surface-2); color: var(--text);
+  /* Layered: surface-2 may be translucent (glass/mica), so it is stacked over an
+     opaque background instead of letting the control go see-through. */
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--surface-2), var(--surface-2));
+  color: var(--text);
 }
 .field select { width: 140px; }
+
+/* Native dropdowns do not always inherit colour, so options are set explicitly
+   - otherwise they paint dark text on a dark translucent list. */
+select option { background: var(--bg); color: var(--text); }
 .check { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 6px 0; }
 
 .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
@@ -363,7 +371,8 @@ body {
   padding: 5px 6px;
   border-radius: 6px;
   border: 1px solid var(--border);
-  background: var(--surface-2);
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--surface-2), var(--surface-2));
   color: var(--text);
   text-align: right;
 }
