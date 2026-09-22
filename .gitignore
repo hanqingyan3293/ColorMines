@@ -20,3 +20,6 @@ build2.log
 
 # Vite temp files
 vite.config.ts.timestamp-*.mjs
+
+# Release artefacts: built locally, published through GitHub Releases.
+release/
